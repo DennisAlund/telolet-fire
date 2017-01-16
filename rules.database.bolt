@@ -1,0 +1,71 @@
+path /users {
+    read() { isSignedIn() }
+    index() { [ "location"] }
+
+    path /{user_id} is User {
+        write() { isCurrentUser(user_id) }
+        validate() { user_id == this.uid }
+    }
+}
+
+
+path /requestsSent/{user_id} {
+    read() { isCurrentUser(user_id) }
+    index() { [ "resolvedAt"] }
+
+    path /{id} is Telolet {
+        read() { isCurrentUser(prior(this.receiverUid)) }
+        create() { isSignedIn() && auth.uid == this.requesterUid }
+        update() { isCurrentUser(this.receiverUid) }
+        validate() { this.id == id && this.requesterUid == user_id }
+    }
+
+}
+
+path /requestsReceived/{user_id} {
+    read() { isCurrentUser(user_id) }
+    index() { [ "resolvedAt"] }
+
+    path /{id} is Telolet {
+        read() { isCurrentUser(prior(this.requesterUid)) }
+        create() { isSignedIn() && auth.uid == this.requesterUid }
+        update() { auth.uid == this.receiverUid }
+        validate() { this.id == id && this.receiverUid == user_id }
+    }
+}
+
+type User {
+    uid: String,
+    location: String | Null,
+    fcmToken: String | Null,
+    lastLogin: Number | Null,
+    image: String,
+    handle: String,
+    color: String
+}
+
+type Telolet {
+    id: String,
+    requesterUid: Immutable<String>,
+    receiverUid: Immutable<String>,
+    requestLocation: Immutable<String>,
+    resolveLocation: Immutable<String> | Null,
+    requestedAt: CurrentTimestamp,
+    resolvedAt: CurrentTimestamp | Null,
+}
+
+type Immutable<T> extends T {
+  validate() { prior(this) == null || prior(this) == this }
+}
+
+type TimeStamp extends Number {
+  validate() { this >= 0 }
+}
+
+type CurrentTimestamp extends TimeStamp {
+  validate() { isInitialValue(this, now) }
+}
+
+isSignedIn() { auth !== null }
+isCurrentUser(uid) { isSignedIn() && auth.uid == uid }
+isInitialValue(value, init) { value == (prior(value) == null ? init : prior(value)) }
