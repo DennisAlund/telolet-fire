@@ -8,15 +8,19 @@ path /users {
     }
 }
 
+path /userStates/{uid} is UserState[] {
+    read() { isCurrentUser(uid) }
+    write() { isCurrentUser(uid) }
+    index() { [ "state"] }
+}
 
 path /requestsSent/{user_id} {
     read() { isCurrentUser(user_id) }
     index() { [ "resolvedAt"] }
 
     path /{id} is Telolet {
-        read() { isCurrentUser(prior(this.receiverUid)) }
         create() { isSignedIn() && auth.uid == this.requesterUid }
-        update() { isCurrentUser(this.receiverUid) }
+        update() { isCurrentUser(this.receiverUid) || isCurrentUser(this.requesterUid) }
         validate() { this.id == id && this.requesterUid == user_id }
     }
 
@@ -27,11 +31,15 @@ path /requestsReceived/{user_id} {
     index() { [ "resolvedAt"] }
 
     path /{id} is Telolet {
-        read() { isCurrentUser(prior(this.requesterUid)) }
         create() { isSignedIn() && auth.uid == this.requesterUid }
-        update() { auth.uid == this.receiverUid }
+        update() { isCurrentUser(this.receiverUid) || isCurrentUser(this.requesterUid) }
         validate() { this.id == id && this.receiverUid == user_id }
     }
+}
+
+type UserState {
+    state: String,
+    teloletId: String
 }
 
 type User {
@@ -47,11 +55,14 @@ type User {
 type Telolet {
     id: String,
     requesterUid: Immutable<String>,
-    receiverUid: Immutable<String>,
+    requestedAt: Immutable<TimeStamp>,
     requestLocation: Immutable<String>,
+
+    receiverUid: Immutable<String>,
+    resolvedAt: Immutable<TimeStamp> | Null,
     resolveLocation: Immutable<String> | Null,
-    requestedAt: CurrentTimestamp,
-    resolvedAt: CurrentTimestamp | Null,
+
+    validate() { this.resolvedAt == null || this.resolvedAt > this.requestedAt }
 }
 
 type Immutable<T> extends T {
