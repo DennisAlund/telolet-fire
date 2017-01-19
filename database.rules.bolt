@@ -16,7 +16,7 @@ path /userStates/{uid} is UserState[] {
 
 path /requestsSent/{user_id} {
     read() { isCurrentUser(user_id) }
-    index() { [ "modified"] }
+    index() { [ "state"] }
 
     path /{id} is Telolet {
         create() { isSignedIn() && auth.uid == this.requesterUid }
@@ -28,7 +28,7 @@ path /requestsSent/{user_id} {
 
 path /requestsReceived/{user_id} {
     read() { isCurrentUser(user_id) }
-    index() { [ "modified"] }
+    index() { [ "state"] }
 
     path /{id} is Telolet {
         create() { isSignedIn() && auth.uid == this.requesterUid }
