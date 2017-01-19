@@ -16,7 +16,7 @@ path /userStates/{uid} is UserState[] {
 
 path /requestsSent/{user_id} {
     read() { isCurrentUser(user_id) }
-    index() { [ "resolvedAt"] }
+    index() { [ "modified"] }
 
     path /{id} is Telolet {
         create() { isSignedIn() && auth.uid == this.requesterUid }
@@ -28,7 +28,7 @@ path /requestsSent/{user_id} {
 
 path /requestsReceived/{user_id} {
     read() { isCurrentUser(user_id) }
-    index() { [ "resolvedAt"] }
+    index() { [ "modified"] }
 
     path /{id} is Telolet {
         create() { isSignedIn() && auth.uid == this.requesterUid }
@@ -54,15 +54,15 @@ type User {
 
 type Telolet {
     id: String,
+    state: String,
+    created: Immutable<TimeStamp>,
+    modified: CurrentTimestamp,
+
     requesterUid: Immutable<String>,
-    requestedAt: Immutable<TimeStamp>,
     requestLocation: Immutable<String>,
 
     receiverUid: Immutable<String>,
-    resolvedAt: Immutable<TimeStamp> | Null,
-    resolveLocation: Immutable<String> | Null,
-
-    validate() { this.resolvedAt == null || this.resolvedAt > this.requestedAt }
+    resolveLocation: Immutable<String> | Null
 }
 
 type Immutable<T> extends T {
@@ -74,9 +74,8 @@ type TimeStamp extends Number {
 }
 
 type CurrentTimestamp extends TimeStamp {
-  validate() { isInitialValue(this, now) }
+  validate() { this == now }
 }
 
 isSignedIn() { auth !== null }
 isCurrentUser(uid) { isSignedIn() && auth.uid == uid }
-isInitialValue(value, init) { value == (prior(value) == null ? init : prior(value)) }
