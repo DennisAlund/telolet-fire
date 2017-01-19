@@ -12,4 +12,4 @@ script:
   - if [ $TRAVIS_BRANCH == "master" ]; then export FIREBASE_DEPLOY_KEY=$FIREBASE_DEPLOY_PROD_KEY; else FIREBASE_DEPLOY_KEY=$FIREBASE_DEPLOY_DEV_KEY; fi
   - if [ $TRAVIS_BRANCH == "master" ]; then export FIREBASE_PROJECT="production"; else export FIREBASE_PROJECT="development"; fi
   - firebase use $FIREBASE_PROJECT --token $FIREBASE_DEPLOY_KEY
-  - firebase deploy -m "Commit $TRAVIS_BRANCH/$TRAVIS_COMMIT, travis build $TRAVIS_BUILD_NUMBER" --non-interactive --token $FIREBASE_DEPLOY_KEY
+  - firebase deploy -m "build $TRAVIS_BUILD_NUMBER $TRAVIS_BRANCH/$TRAVIS_COMMIT" --non-interactive --token $FIREBASE_DEPLOY_KEY
