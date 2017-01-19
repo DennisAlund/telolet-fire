@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "telolet-664db"
+    "production": "telolet-664db",
+    "development": "telolet-3b4b8"
   }
 }
