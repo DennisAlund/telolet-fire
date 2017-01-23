@@ -8,10 +8,13 @@ path /users {
     }
 }
 
-path /userStates/{uid} is UserState[] {
-    read() { isCurrentUser(uid) }
-    write() { isCurrentUser(uid) }
+path /userStates/{curr_uid} {
+    read() { isCurrentUser(curr_uid) }
+    write() { isCurrentUser(curr_uid) }
     index() { [ "state", "isFocusState"] }
+    path /{other_uid} is UserState {
+      write() { isCurrentUser(other_uid) }
+    }
 }
 
 path /requestsSent/{user_id} {
